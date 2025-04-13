@@ -296,7 +296,7 @@ async def city(update: Update, context: ContextTypes.DEFAULT_TYPE):
     
 # Запуск бота
 def main():
-    app = ApplicationBuilder().token("7640754897:AAHJbnQqQcNVrBAYJFa3cZs8h5NG54OjXCc").build()
+    app = ApplicationBuilder().token(os.getenv("BOT_TOKEN")).build()
     conv = ConversationHandler(
         entry_points=[CommandHandler("start", start)],
         states={
