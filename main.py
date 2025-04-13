@@ -340,8 +340,15 @@ async def setup():
     await app.bot.delete_webhook(drop_pending_updates=True)
     await app.bot.set_webhook(webhook_url)
 
+import uvicorn
 import asyncio
-asyncio.run(setup())
+
+if __name__ == "__main__":
+    async def start():
+        await setup()
+        uvicorn.run("main:web_app", host="0.0.0.0", port=10000)
+
+    asyncio.run(start())
 
 
 # Обробка кнопок меню
