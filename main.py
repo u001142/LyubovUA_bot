@@ -355,5 +355,8 @@ async def handle_text_buttons(update: Update, context: ContextTypes.DEFAULT_TYPE
         await premium(update, context)
 
 
+import uvicorn
+
 if __name__ == "__main__":
-    main()
+    uvicorn.run("main:web_app", host="0.0.0.0", port=10000)
+
