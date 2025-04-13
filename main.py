@@ -287,6 +287,15 @@ async def premium(update: Update, context: ContextTypes.DEFAULT_TYPE):
             reply_markup=share_button,
             parse_mode=ParseMode.HTML
         )
+# Обробка кнопок меню
+async def handle_text_buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    text = update.message.text
+    if text == "🔍 Пошук":
+        await search(update, context)
+    elif text == "👤 Профіль":
+        await profile(update, context)
+    elif text == "💎 Преміум":
+        await premium(update, context)
 
 # Обробка міста
 async def city(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -349,18 +358,6 @@ if __name__ == "__main__":
         uvicorn.run("main:web_app", host="0.0.0.0", port=10000)
 
     asyncio.run(start())
-
-
-# Обробка кнопок меню
-async def handle_text_buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    text = update.message.text
-    if text == "🔍 Пошук":
-        await search(update, context)
-    elif text == "👤 Профіль":
-        await profile(update, context)
-    elif text == "💎 Преміум":
-        await premium(update, context)
-
 
 import uvicorn
 
