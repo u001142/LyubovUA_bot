@@ -1,9 +1,6 @@
 # Телеграм-бот знайомств "Знайома"
 # Мінімально робоча структура з підтримкою анкет, лайків, чатів, преміум, рефералів та мультимовного інтерфейсу
 
-from aiogram.contrib.fsm_storage.memory import MemoryStorage
-from aiogram.dispatcher import FSMContext
-from aiogram.dispatcher.filters.state import State, StatesGroup
 import logging
 import asyncio
 import sqlite3
