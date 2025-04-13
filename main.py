@@ -296,30 +296,53 @@ async def city(update: Update, context: ContextTypes.DEFAULT_TYPE):
     return LOOKING_FOR
     
 # Запуск бота
-def main():
-    app = ApplicationBuilder().token(os.getenv("BOT_TOKEN")).build()
-    conv = ConversationHandler(
-        entry_points=[CommandHandler("start", start)],
-        states={
-            NAME: [MessageHandler(filters.TEXT & ~filters.COMMAND, name)],
-            AGE: [MessageHandler(filters.TEXT & ~filters.COMMAND, age)],
-            GENDER: [MessageHandler(filters.TEXT & ~filters.COMMAND, gender)],
-            CITY: [MessageHandler(filters.TEXT & ~filters.COMMAND, city)],
-            LOOKING_FOR: [MessageHandler(filters.TEXT & ~filters.COMMAND, looking_for)],
-            PHOTO: [MessageHandler(filters.PHOTO, photo)],
-        },
-        fallbacks=[]
-    )
-    app.add_handler(conv)
-    app.add_handler(CommandHandler("search", search))
-    app.add_handler(CommandHandler("profile", profile))
-    app.add_handler(CommandHandler("premium", premium))
-    app.add_handler(CallbackQueryHandler(button))
-    # ⬇️ ВАЖЛИВО: обробка кнопок меню
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text_buttons))
-    # ⬇️ Обробка чату між парами
-    app.add_handler(MessageHandler(filters.TEXT | filters.PHOTO, relay))
-    app.run_polling()
+import os
+from fastapi import FastAPI, Request
+from telegram import Update
+from telegram.ext import ApplicationBuilder
+
+app = ApplicationBuilder().token(os.getenv("BOT_TOKEN")).build()
+
+conv = ConversationHandler(
+    entry_points=[CommandHandler("start", start)],
+    states={
+        NAME: [MessageHandler(filters.TEXT & ~filters.COMMAND, name)],
+        AGE: [MessageHandler(filters.TEXT & ~filters.COMMAND, age)],
+        GENDER: [MessageHandler(filters.TEXT & ~filters.COMMAND, gender)],
+        CITY: [MessageHandler(filters.TEXT & ~filters.COMMAND, city)],
+        LOOKING_FOR: [MessageHandler(filters.TEXT & ~filters.COMMAND, looking_for)],
+        PHOTO: [MessageHandler(filters.PHOTO, photo)],
+    },
+    fallbacks=[]
+)
+
+app.add_handler(conv)
+app.add_handler(CommandHandler("search", search))
+app.add_handler(CommandHandler("profile", profile))
+app.add_handler(CommandHandler("premium", premium))
+app.add_handler(CallbackQueryHandler(button))
+app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text_buttons))
+app.add_handler(MessageHandler(filters.TEXT | filters.PHOTO, relay))
+
+# === WEBHOOK ===
+web_app = FastAPI()
+
+@web_app.post("/webhook")
+async def process_webhook(request: Request):
+    data = await request.json()
+    update = Update.de_json(data, app.bot)
+    await app.process_update(update)
+    return {"ok": True}
+
+# Запускаємо Webhook при старті
+async def setup():
+    webhook_url = "https://lyubovua-bot.onrender.com/webhook"
+    await app.bot.delete_webhook(drop_pending_updates=True)
+    await app.bot.set_webhook(webhook_url)
+
+import asyncio
+asyncio.run(setup())
+
 
 # Обробка кнопок меню
 async def handle_text_buttons(update: Update, context: ContextTypes.DEFAULT_TYPE):
