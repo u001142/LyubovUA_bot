@@ -226,6 +226,7 @@ web_app = FastAPI()
 @web_app.post("/webhook")
 async def process_webhook(request: Request):
     data = await request.json()
+    print("📩 Новий webhook-апдейт:", data)  # <-- Ось це ДОДАЙ
     update = Update.de_json(data, app.bot)
     await app.process_update(update)
     return {"ok": True}
