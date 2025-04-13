@@ -334,6 +334,15 @@ app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text_butt
 app.add_handler(MessageHandler(filters.TEXT | filters.PHOTO, relay))
 
 # === WEBHOOK ===
+import uvicorn
+from fastapi import FastAPI, Request
+from telegram import Update
+from telegram.ext import ApplicationBuilder
+import os
+
+app = ApplicationBuilder().token(os.getenv("BOT_TOKEN")).build()
+
+# FastAPI Webhook
 web_app = FastAPI()
 
 @web_app.post("/webhook")
@@ -343,24 +352,20 @@ async def process_webhook(request: Request):
     await app.process_update(update)
     return {"ok": True}
 
-# Запускаємо Webhook при старті
+# Запускаємо Webhook при запуску
 async def setup():
     webhook_url = "https://lyubovua-bot.onrender.com/webhook"
     await app.bot.delete_webhook(drop_pending_updates=True)
     await app.bot.set_webhook(webhook_url)
 
-import uvicorn
-import asyncio
-
+# === ЗАПУСК Webhook сервера ===
 if __name__ == "__main__":
-    async def start():
-        await setup()
-        uvicorn.run("main:web_app", host="0.0.0.0", port=10000)
+    import nest_asyncio
+    nest_asyncio.apply()  # 👈 уникаємо помилки "asyncio.run() in event loop"
 
-    asyncio.run(start())
+    import asyncio
+    asyncio.get_event_loop().run_until_complete(setup())
 
-import uvicorn
-
-if __name__ == "__main__":
     uvicorn.run("main:web_app", host="0.0.0.0", port=10000)
+
 
