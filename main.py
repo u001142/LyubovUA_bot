@@ -5,6 +5,8 @@ import logging
 import asyncio
 import sqlite3
 from datetime import datetime, timedelta
+from telegram import Bot
+from telegram.ext import ApplicationBuilder
 
 API_TOKEN = '7551679965:AAGkmdzrdq_U5ALWFEaThVQwXjGf07RuzNw'
 
