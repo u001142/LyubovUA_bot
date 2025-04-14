@@ -24,6 +24,21 @@ app = FastAPI()
 # Telegram Application
 application = Application.builder().token(TOKEN).build()
 
+conv_handler = ConversationHandler(
+    entry_points=[CommandHandler('start', start)],
+    states={
+        NAME: [MessageHandler(filters.TEXT & ~filters.COMMAND, name)],
+        AGE: [MessageHandler(filters.TEXT & ~filters.COMMAND, age)],
+        GENDER: [MessageHandler(filters.TEXT & ~filters.COMMAND, gender)],
+        CITY: [MessageHandler(filters.TEXT & ~filters.COMMAND, city)],
+        LOOKING_FOR: [MessageHandler(filters.TEXT & ~filters.COMMAND, looking_for)],
+        PHOTO: [MessageHandler(filters.PHOTO, photo)],
+    },
+    fallbacks=[]
+)
+
+application.add_handler(conv_handler)
+
 # SQLite
 conn = sqlite3.connect('users.db', check_same_thread=False)
 c = conn.cursor()
