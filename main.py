@@ -23,7 +23,11 @@ app = FastAPI()
 
 # Telegram Application
 application = Application.builder().token(TOKEN).build()
-await application.initialize()
+
+# Ініціалізація при запуску FastAPI
+@app.on_event("startup")
+async def on_startup():
+    await application.initialize() 
 
 # SQLite
 conn = sqlite3.connect('users.db', check_same_thread=False)
