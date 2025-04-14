@@ -164,6 +164,7 @@ application.add_handler(CallbackQueryHandler(button))
 @app.post(f"/{WEBHOOK_SECRET}")
 async def telegram_webhook(req: Request):
     data = await req.json()
+    print("Update received:", data)  # ДОДАЙ ЦЕ
     update = Update.de_json(data, application.bot)
     await application.process_update(update)
     return {"ok": True}
