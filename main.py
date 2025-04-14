@@ -54,7 +54,7 @@ NAME, AGE, GENDER, CITY, LOOKING_FOR, PHOTO = range(6)
 
 # Хендлери
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("Привіт! Я бот знайомств 'Знайомства-UA'. Давай створимо твою анкету! Як тебе звати?")
+    await update.message.reply_text("Привіт! Я бот знайомств 'ЛюбовUA❤️'. Давай створимо твою анкету! Як тебе звати?")
     return NAME
 
 async def name(update: Update, context: ContextTypes.DEFAULT_TYPE):
