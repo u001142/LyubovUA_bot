@@ -13,7 +13,7 @@ from dotenv import load_dotenv
 load_dotenv()
 TOKEN = os.getenv("BOT_TOKEN")
 WEBHOOK_SECRET = os.getenv("WEBHOOK_SECRET")
-
+print("WEBHOOK_SECRET:", WEBHOOK_SECRET)
 # Logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
