@@ -23,6 +23,7 @@ app = FastAPI()
 
 # Telegram Application
 application = Application.builder().token(TOKEN).build()
+await application.initialize()
 
 # SQLite
 conn = sqlite3.connect('users.db', check_same_thread=False)
