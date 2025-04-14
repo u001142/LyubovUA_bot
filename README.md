@@ -1,1 +1,0 @@
-# LyubovUA_bot
