@@ -163,8 +163,10 @@ application.add_handler(CallbackQueryHandler(button))
 # FastAPI endpoint для Webhook
 @app.post(f"/{WEBHOOK_SECRET}")
 async def telegram_webhook(req: Request):
+    print("Webhook triggered!")  # крок 1
     data = await req.json()
-    print("Update received:", data)  # ДОДАЙ ЦЕ
+    print("Raw update data:", data)  # крок 2
     update = Update.de_json(data, application.bot)
+    print("Parsed update:", update)  # крок 3
     await application.process_update(update)
     return {"ok": True}
