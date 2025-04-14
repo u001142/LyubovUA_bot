@@ -1,1 +1,8 @@
-python-telegram-bot==20.3
+python-telegram-bot[ext]==20.7
+fastapi
+uvicorn
+sqlalchemy
+databases
+aiohttp
+pydantic
+python-dotenv 
