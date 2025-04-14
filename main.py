@@ -1,9 +1,9 @@
 import logging
 from fastapi import FastAPI, Request
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import (
-    Application, CommandHandler, MessageHandler, filters, CallbackContext,
-    CallbackQueryHandler, ConversationHandler
+    Application, CommandHandler, MessageHandler, filters,
+    CallbackQueryHandler, ConversationHandler, ContextTypes
 )
 import sqlite3
 import os
@@ -14,6 +14,7 @@ load_dotenv()
 TOKEN = os.getenv("BOT_TOKEN")
 WEBHOOK_SECRET = os.getenv("WEBHOOK_SECRET")
 print("WEBHOOK_SECRET:", WEBHOOK_SECRET)
+
 # Logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -27,7 +28,7 @@ application = Application.builder().token(TOKEN).build()
 # Ініціалізація при запуску FastAPI
 @app.on_event("startup")
 async def on_startup():
-    await application.initialize() 
+    await application.initialize()
 
 # SQLite
 conn = sqlite3.connect('users.db', check_same_thread=False)
@@ -52,36 +53,36 @@ conn.commit()
 NAME, AGE, GENDER, CITY, LOOKING_FOR, PHOTO = range(6)
 
 # Хендлери
-def start(update: Update, context: CallbackContext):
-    update.message.reply_text("Привіт! Я бот знайомств 'Знайомства-UA'. Давай створимо твою анкету! Як тебе звати?")
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await update.message.reply_text("Привіт! Я бот знайомств 'Знайомства-UA'. Давай створимо твою анкету! Як тебе звати?")
     return NAME
 
-def name(update: Update, context: CallbackContext):
+async def name(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data['name'] = update.message.text
-    update.message.reply_text("Скільки тобі років?")
+    await update.message.reply_text("Скільки тобі років?")
     return AGE
 
-def age(update: Update, context: CallbackContext):
+async def age(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data['age'] = int(update.message.text)
-    update.message.reply_text("Яка твоя стать? (чоловік / жінка)")
+    await update.message.reply_text("Яка твоя стать? (чоловік / жінка)")
     return GENDER
 
-def gender(update: Update, context: CallbackContext):
+async def gender(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data['gender'] = update.message.text.lower()
-    update.message.reply_text("З якого ти міста?")
+    await update.message.reply_text("З якого ти міста?")
     return CITY
 
-def city(update: Update, context: CallbackContext):
+async def city(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data['city'] = update.message.text
-    update.message.reply_text("Кого шукаєш? (чоловіка / жінку)")
+    await update.message.reply_text("Кого шукаєш? (чоловіка / жінку)")
     return LOOKING_FOR
 
-def looking_for(update: Update, context: CallbackContext):
+async def looking_for(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data['looking_for'] = update.message.text.lower()
-    update.message.reply_text("Надішли своє фото для анкети")
+    await update.message.reply_text("Надішли своє фото для анкети")
     return PHOTO
 
-def photo(update: Update, context: CallbackContext):
+async def photo(update: Update, context: ContextTypes.DEFAULT_TYPE):
     photo_file = update.message.photo[-1].file_id
     user_id = update.message.from_user.id
     c.execute('REPLACE INTO users (user_id, name, age, gender, city, looking_for, photo) VALUES (?, ?, ?, ?, ?, ?, ?)',
@@ -89,35 +90,35 @@ def photo(update: Update, context: CallbackContext):
                context.user_data['gender'], context.user_data['city'],
                context.user_data['looking_for'], photo_file))
     conn.commit()
-    update.message.reply_text("Анкету створено! Можеш переглядати інших користувачів за командою /search")
+    await update.message.reply_text("Анкету створено! Можеш переглядати інших користувачів за командою /search")
     return ConversationHandler.END
 
-def search(update: Update, context: CallbackContext):
+async def search(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.message.from_user.id
     c.execute("SELECT gender, looking_for FROM users WHERE user_id=?", (user_id,))
     current = c.fetchone()
     if not current:
-        update.message.reply_text("Спочатку зареєструйся за допомогою /start")
+        await update.message.reply_text("Спочатку зареєструйся за допомогою /start")
         return
     gender, looking_for = current
     c.execute("SELECT * FROM users WHERE gender=? AND user_id!=? AND user_id NOT IN (SELECT liked_id FROM likes WHERE liker_id=?) LIMIT 1",
               (looking_for, user_id, user_id))
     person = c.fetchone()
     if not person:
-        update.message.reply_text("Немає нових анкет наразі. Спробуй пізніше!")
+        await update.message.reply_text("Немає нових анкет наразі. Спробуй пізніше!")
         return
     buttons = [[InlineKeyboardButton("Цікаво", callback_data=f"like_{person[0]}"),
                 InlineKeyboardButton("Пропустити", callback_data="skip")]]
-    context.bot.send_photo(
+    await context.bot.send_photo(
         chat_id=update.effective_chat.id,
         photo=person[6],
         caption=f"Ім’я: {person[1]}\nВік: {person[2]}\nМісто: {person[4]}",
         reply_markup=InlineKeyboardMarkup(buttons)
     )
 
-def button(update: Update, context: CallbackContext):
+async def button(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
-    query.answer()
+    await query.answer()
     user_id = query.from_user.id
     if query.data.startswith("like_"):
         liked_id = int(query.data.split("_")[1])
@@ -125,26 +126,26 @@ def button(update: Update, context: CallbackContext):
         conn.commit()
         c.execute("SELECT * FROM likes WHERE liker_id=? AND liked_id=?", (liked_id, user_id))
         if c.fetchone():
-            context.bot.send_message(user_id, "У вас взаємна симпатія!")
-            context.bot.send_message(liked_id, "У вас взаємна симпатія!")
-        query.edit_message_reply_markup(reply_markup=None)
-        query.message.reply_text("Симпатія зафіксована. Хочеш ще — напиши /search")
+            await context.bot.send_message(user_id, "У вас взаємна симпатія!")
+            await context.bot.send_message(liked_id, "У вас взаємна симпатія!")
+        await query.edit_message_reply_markup(reply_markup=None)
+        await query.message.reply_text("Симпатія зафіксована. Хочеш ще — напиши /search")
     elif query.data == "skip":
-        query.edit_message_reply_markup(reply_markup=None)
-        query.message.reply_text("Наступна анкета — /search")
+        await query.edit_message_reply_markup(reply_markup=None)
+        await query.message.reply_text("Наступна анкета — /search")
 
-def profile(update: Update, context: CallbackContext):
+async def profile(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.message.from_user.id
     c.execute("SELECT * FROM users WHERE user_id=?", (user_id,))
     data = c.fetchone()
     if data:
-        context.bot.send_photo(
+        await context.bot.send_photo(
             chat_id=update.effective_chat.id,
             photo=data[6],
             caption=f"Твоя анкета:\nІм’я: {data[1]}\nВік: {data[2]}\nСтать: {data[3]}\nМісто: {data[4]}\nШукаєш: {data[5]}"
         )
     else:
-        update.message.reply_text("Анкету не знайдено. Створи її командою /start")
+        await update.message.reply_text("Анкету не знайдено. Створи її командою /start")
 
 # Хендлери
 conv_handler = ConversationHandler(
@@ -168,10 +169,10 @@ application.add_handler(CallbackQueryHandler(button))
 # FastAPI endpoint для Webhook
 @app.post(f"/{WEBHOOK_SECRET}")
 async def telegram_webhook(req: Request):
-    print("Webhook triggered!")  # крок 1
+    print("Webhook triggered!")
     data = await req.json()
-    print("Raw update data:", data)  # крок 2
+    print("Raw update data:", data)
     update = Update.de_json(data, application.bot)
-    print("Parsed update:", update)  # крок 3
+    print("Parsed update:", update)
     await application.process_update(update)
     return {"ok": True}
